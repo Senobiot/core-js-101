@@ -20,8 +20,12 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+  this.getArea = function get() {
+    return this.width * this.height;
+  };
 }
 
 
@@ -35,8 +39,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +55,10 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const objectProto = Object.create(proto);
+  const jsonObjectProperties = JSON.parse(json);
+  return Object.assign(objectProto, jsonObjectProperties);
 }
 
 
@@ -111,33 +117,91 @@ function fromJSON(/* proto, json */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+
+  build: '',
+  pseudoRepeat: false,
+  idRepeat: false,
+  elemRepeat: false,
+  follow: '0',
+
+  stringify() {
+    return this.build;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  errorRepeat() {
+    throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  errorFollow() {
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    if (this.elemRepeat === true) { this.errorRepeat(); }
+    const elementObject = Object.create(cssSelectorBuilder);
+    elementObject.elemRepeat = true;
+    const order = '1';
+    if (order < +this.follow.slice(-1)) { this.errorFollow(); }
+    elementObject.follow = this.follow + order;
+    elementObject.build = this.build + value;
+    return elementObject;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.idRepeat === true) { this.errorRepeat(); }
+    const idObject = Object.create(cssSelectorBuilder);
+    idObject.idRepeat = true;
+    const order = '2';
+    if (order < +this.follow.slice(-1)) { this.errorFollow(); }
+    idObject.follow = this.follow + order;
+    idObject.build = `${this.build}#${value}`;
+    return idObject;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const classObject = Object.create(cssSelectorBuilder);
+    const order = '3';
+    if (order < +this.follow.slice(-1)) { this.errorFollow(); }
+    classObject.follow = this.follow + order;
+    classObject.build = `${this.build}.${value}`;
+    return classObject;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const attrObject = Object.create(cssSelectorBuilder);
+    const order = '4';
+    if (order < +this.follow.slice(-1)) { this.errorFollow(); }
+    attrObject.follow = this.follow + order;
+    attrObject.build = `${this.build}[${value}]`;
+    return attrObject;
   },
+
+  pseudoClass(value) {
+    const pseudoClassObject = Object.create(cssSelectorBuilder);
+    const order = '5';
+    if (order < +this.follow.slice(-1)) { this.errorFollow(); }
+    pseudoClassObject.follow = this.follow + order;
+    pseudoClassObject.build = `${this.build}:${value}`;
+    return pseudoClassObject;
+  },
+
+  pseudoElement(value) {
+    if (this.pseudoRepeat === true) { this.errorRepeat(); }
+    const pseudoElementObject = Object.create(cssSelectorBuilder);
+    pseudoElementObject.pseudoRepeat = true;
+    const order = '6';
+    if (order < +this.follow.slice(-1)) { this.errorFollow(); }
+    pseudoElementObject.follow = this.follow + order;
+    pseudoElementObject.build = `${this.build}::${value}`;
+    return pseudoElementObject;
+  },
+
+  combine(selector1, combinator, selector2) {
+    const combineObject = Object.create(cssSelectorBuilder);
+    combineObject.build = `${selector1.build} ${combinator} ${selector2.build}`;
+    return combineObject;
+  },
+
 };
 
 
