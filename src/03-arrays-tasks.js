@@ -532,9 +532,11 @@ function distinct(arr) {
  */
 function group(array, keySelector, valueSelector) {
   const map = new Map();
-  array.map((curr, ind, arr) => (map.has(keySelector(arr[ind]))
-    ? map.get(keySelector(arr[ind])).push(valueSelector(arr[ind]))
-    : map.set(keySelector(arr[ind]), [valueSelector(arr[ind])])));
+
+  array.map((value, index) => (!map.get(array.map(keySelector)[index])
+    ? map.set(array.map(keySelector)[index], [array.map(valueSelector)[index]])
+    : (map.get(array.map(keySelector)[index])).push(array.map(valueSelector)[index])));
+
   return map;
 }
 
